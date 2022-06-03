@@ -5,5 +5,5 @@ using UnityEngine;
 public class QuizComponentsBase
 {
     [SerializeField] public string Question;
-    [SerializeField] public string CorrectAnswer;
+    [SerializeField] public GameObject CorrectAnswer;
 }

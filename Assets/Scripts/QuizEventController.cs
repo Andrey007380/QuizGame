@@ -3,18 +3,19 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public class QuizEventController : MonoBehaviour, ILevelChanger
 {
     [SerializeField] private Text questionText;
-    [SerializeField] private List<QuizComponentsBase> listOfGameComponents = new List<QuizComponentsBase>();
+    [SerializeField] private List<QuizComponentsBase> listOfGameComponents;
     [SerializeField] private int currentQuestion = 0;
-    [SerializeField] private List<GameObject> optionsGameobject = new List<GameObject>();
+    [SerializeField] private List<GameObject> optionsGameobject;
     [SerializeField] private GameObject restartLevel;
-    private int numberAsked;
-    private string clickedObject;
+    private int _numberAsked;
+    private GameObject _clickedObject;
 
-    [SerializeField] private UnityEvent OnAnswerClick = new UnityEvent();
+    [SerializeField] private UnityEvent<GameObject> onAnswerClick;
 
     private void Start()
     {
@@ -22,22 +23,22 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
     }
     public void ChangeLevel()
     {
-        if (currentQuestion <= listOfGameComponents.Count)
-        {
-            questionText.text = listOfGameComponents[currentQuestion].Question;
+        if (currentQuestion > listOfGameComponents.Count) 
+            return;
+        
+        questionText.text = listOfGameComponents[currentQuestion].Question;
 
-                switch (currentQuestion)
-                {
-                    case 0:
-                    EasyLevel();
-                        break;
-                    case 1:
-                    MediumLevel();
-                        break;
-                    case 2:
-                    HardLevel();
-                        break;
-                }
+        switch (currentQuestion)
+        {
+            case 0:
+                EasyLevel();
+                break;
+            case 1:
+                MediumLevel();
+                break;
+            case 2:
+                HardLevel();
+                break;
         }
     }
     public void EasyLevel()
@@ -46,7 +47,8 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
             {
                 gameObject.SetActive(true);
             }
-        optionsGameobject[0].name = listOfGameComponents[currentQuestion].CorrectAnswer;
+
+            var correctAnswer = listOfGameComponents[currentQuestion].CorrectAnswer;
     }
     public void MediumLevel()
     {
@@ -54,7 +56,7 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
         {
             gameObject.SetActive(true);
         }
-        optionsGameobject[5].name = listOfGameComponents[currentQuestion].CorrectAnswer;
+        var correctAnswer =listOfGameComponents[currentQuestion].CorrectAnswer;
 
     }
     public void HardLevel()
@@ -63,7 +65,7 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
         {
             gameObject.SetActive(true);
         }
-        optionsGameobject[8].name = listOfGameComponents[currentQuestion].CorrectAnswer;
+        var correctAnswer = listOfGameComponents[currentQuestion].CorrectAnswer;
     }
     public void RestartLevel()
     {
@@ -79,15 +81,15 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
     {
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit)) 
         {
-            clickedObject = hit.collider.gameObject.name;
-            AnswerCheaker();
+            _clickedObject = hit.collider.gameObject;
+            AnswerCheaker(_clickedObject);
         }
     }
-    private void AnswerCheaker()
+    public void AnswerCheaker(GameObject clicked)
     {
-        if (clickedObject == listOfGameComponents[currentQuestion].CorrectAnswer)
+        if (_clickedObject == listOfGameComponents[currentQuestion].CorrectAnswer)
         {
             Debug.Log("Correct");
             if (currentQuestion < listOfGameComponents.Capacity - 1)
@@ -101,7 +103,7 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
             }
 
         }
-        else if (clickedObject == restartLevel.name)
+        else if (_clickedObject == restartLevel)
         {
             RestartLevel();        
         }
@@ -112,12 +114,7 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
     }
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            OnAnswerClick.Invoke();
-
-        }
-
+        if (Input.GetMouseButtonDown(0)) Click();
     }
 
     public void End()
@@ -128,6 +125,7 @@ public class QuizEventController : MonoBehaviour, ILevelChanger
         }
         restartLevel.gameObject.SetActive(true);
     }
+    
 }
 
  
